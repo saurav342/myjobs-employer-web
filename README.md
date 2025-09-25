@@ -28,16 +28,18 @@ A lightweight React web app for employers with OTP-only login and city-based job
 ## Configure and run
 1. Set the API base URL (optional). Create `.env` in `employer-web/`:
 
-```
-VITE_API_BASE_URL=https://ec2-16-176-22-21.ap-southeast-2.compute.amazonaws.com:3000/api
-```
-
-For local development, you can use HTTP:
+For local development:
 ```
 VITE_API_BASE_URL=http://localhost:3000/api
 ```
+or
+```
+VITE_API_BASE_URL=http://ec2-16-176-22-21.ap-southeast-2.compute.amazonaws.com:3000/api
+```
 
-**Important**: Use HTTPS URLs for production deployments to avoid mixed content security issues. Without the `.env` file, it defaults to the HTTPS EC2 URL.
+For production (Netlify), the app automatically uses a proxy configured in `netlify.toml` to avoid mixed content issues.
+
+**Important**: The backend server uses HTTP (no SSL configured). For production deployments, Netlify proxy handles the HTTPS-to-HTTP conversion automatically.
 
 2. Install and run:
 
