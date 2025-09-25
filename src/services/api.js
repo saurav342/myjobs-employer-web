@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://ec2-16-176-22-21.ap-southeast-2.compute.amazonaws.com:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ec2-16-176-22-21.ap-southeast-2.compute.amazonaws.com:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
