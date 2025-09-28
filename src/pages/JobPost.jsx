@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { getTemplates } from '../services/jobs.js';
 
 const jobRoles = [
-  'Risk Compliance', 'Software Development', 'Marketing', 'Sales', 'HR', 'Finance',
-  'Operations', 'Customer Service', 'Data Analysis', 'Design', 'Other'
+  'construction', 'manufacturing', 'delivery', 'housekeeping', 'security', 'driver', 'cook', 'waiter', 
+  'welder', 'carpenter', 'painter', 'mason', 'loader', 'gardener', 'electrician', 'plumber', 'mechanic', 
+  'cleaner', 'helper', 'retail', 'cleaning', 'cooking', 'Risk Compliance', 'Software Development', 
+  'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Customer Service', 'Data Analysis', 'Design', 'other'
 ];
 
-const jobTypes = ['Full Time', 'Part Time', 'Both (Full-Time And Part-Time)'];
+const jobTypes = ['Full Time', 'Part Time', 'Contract', 'Temporary', 'Both (Full-Time And Part-Time)'];
 const workLocationTypes = ['Work From Office', 'Work From Home', 'Field Job'];
 const payTypes = ['Fixed Only', 'Fixed + Incentive', 'Incentive Only'];
 
@@ -41,13 +45,20 @@ const perks = [
 
 export default function JobPost() {
   const nav = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [templates, setTemplates] = useState([]);
+
+  // Determine if this is a new signup flow or existing customer flow
+  const isNewSignup = location.pathname === '/jobs/post';
+  const companyName = isNewSignup ? 'Infosys' : (user?.companyName || 'Your Company');
 
   const [form, setForm] = useState({
     // Job Details
-    companyName: 'Infosys',
+    companyName: '',
     jobTitle: '',
     jobRole: '',
     jobType: 'Full Time',
@@ -94,8 +105,39 @@ export default function JobPost() {
     whatsappAlerts: 'myself'
   });
 
+  // Update company name when user data is available
+  useEffect(() => {
+    setForm(prev => ({ ...prev, companyName }));
+  }, [companyName]);
+
+  // Load templates
+  useEffect(() => {
+    (async () => {
+      try { 
+        setTemplates(await getTemplates()); 
+      } catch (e) {
+        console.error('Failed to load templates:', e);
+      }
+    })();
+  }, []);
+
   const updateForm = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const applyTemplate = (template) => {
+    if (!template) return;
+    setForm(prev => ({
+      ...prev,
+      jobTitle: template.title || '',
+      jobRole: template.category || '',
+      jobType: template.jobType || 'Full Time',
+      jobDescription: template.description || '',
+      fixedSalaryMin: template.salary?.min?.toString() || '10000',
+      fixedSalaryMax: template.salary?.max?.toString() || '100000',
+      additionalPerks: template.benefits || [],
+      // Map other template fields as needed
+    }));
   };
 
   const togglePerk = (perk) => {
@@ -147,7 +189,7 @@ export default function JobPost() {
         title: form.jobTitle,
         company: form.companyName,
         category: form.jobRole,
-        jobType: form.jobType.toLowerCase().replace(' ', '-'),
+        jobType: form.jobType.toLowerCase().replace(/\s+/g, '-').replace(/\(.*?\)/g, ''),
         description: form.jobDescription,
         location: { city: 'Bengaluru', state: 'Karnataka' },
         salary: { 
@@ -191,6 +233,57 @@ export default function JobPost() {
     }
   };
 
+  const onSaveDraft = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        title: form.jobTitle,
+        company: form.companyName,
+        category: form.jobRole,
+        jobType: form.jobType.toLowerCase().replace(/\s+/g, '-').replace(/\(.*?\)/g, ''),
+        description: form.jobDescription,
+        location: { city: 'Bengaluru', state: 'Karnataka' },
+        salary: { 
+          min: parseInt(form.fixedSalaryMin), 
+          max: parseInt(form.fixedSalaryMax), 
+          period: 'monthly' 
+        },
+        requirements: [],
+        benefits: form.additionalPerks,
+        urgentHiring: false,
+        featured: false,
+        status: 'draft',
+        // Additional fields for the new flow
+        workLocationType: form.workLocationType,
+        payType: form.payType,
+        minEducation: form.minEducation,
+        englishLevel: form.englishLevel,
+        experienceRequired: form.experienceRequired,
+        minExperience: form.minExperience,
+        isWalkInInterview: form.isWalkInInterview,
+        walkInAddress: form.walkInAddress,
+        walkInStartDate: form.walkInStartDate,
+        walkInEndDate: form.walkInEndDate,
+        walkInStartTime: form.walkInStartTime,
+        walkInEndTime: form.walkInEndTime,
+        otherInstructions: form.otherInstructions,
+        contactPreference: form.contactPreference,
+        whatsappAlerts: form.whatsappAlerts
+      };
+
+      const res = await api.post('/jobs', payload);
+      if (res.data?.success) {
+        nav('/jobs');
+      } else {
+        setError(res.data?.message || 'Failed to save draft');
+      }
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to save draft');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderStepIndicator = () => (
     <div className="step-indicator">
       {[1, 2, 3, 4, 5].map((step) => (
@@ -214,7 +307,22 @@ export default function JobPost() {
     <div className="step-content">
       <div className="step-header">
         <h2>Post a new job</h2>
-        <button className="use-templates-btn">Use Templates</button>
+        <div className="template-dropdown">
+          <select 
+            onChange={(e) => {
+              const template = templates.find(t => t._id === e.target.value);
+              if (template) applyTemplate(template);
+            }}
+            className="template-select"
+          >
+            <option value="">Use Templates</option>
+            {templates.map(t => (
+              <option key={t._id} value={t._id}>
+                {t.title} • {t.category}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="section">
@@ -922,7 +1030,7 @@ export default function JobPost() {
   return (
     <div className="job-post-container">
       <div className="job-post-header">
-        <button className="back-btn" onClick={() => nav('/jobs')}>← Post job</button>
+        <button className="back-btn" onClick={() => nav(isNewSignup ? '/onboarding' : '/jobs')}>← {isNewSignup ? 'Back to onboarding' : 'Back to jobs'}</button>
       </div>
 
       {renderStepIndicator()}
@@ -943,13 +1051,22 @@ export default function JobPost() {
               Continue
             </button>
           ) : (
-            <button 
-              className="continue-btn" 
-              onClick={onSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Posting...' : 'Post Job'}
-            </button>
+            <div className="final-actions">
+              <button 
+                className="save-draft-btn" 
+                onClick={onSaveDraft}
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : 'Save Draft'}
+              </button>
+              <button 
+                className="continue-btn" 
+                onClick={onSubmit}
+                disabled={loading}
+              >
+                {loading ? 'Posting...' : 'Post Job'}
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -7,7 +7,6 @@ import Onboarding from './pages/Onboarding.jsx';
 import JobPost from './pages/JobPost.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import JobsList from './pages/JobsList.jsx';
-import JobsNew from './pages/JobsNew.jsx';
 import Applications from './pages/Applications.jsx';
 import Profile from './pages/Profile.jsx';
 import CandidateSearch from './pages/CandidateSearch.jsx';
@@ -49,7 +48,7 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  <JobsNew />
+                  <JobPost />
                 </Layout>
               </ProtectedRoute>
             }
