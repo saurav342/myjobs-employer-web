@@ -17,8 +17,8 @@ const TEST_USER = {
   }
 };
 
-// Check if test mode is enabled
-const isTestMode = import.meta.env.VITE_TEST_MODE === 'true' && import.meta.env.DEV;
+// Check if test mode is enabled (works for dev and production when explicitly toggled)
+const isTestMode = import.meta.env.VITE_TEST_MODE === 'true';
 
 export async function sendOTP(phoneNumber) {
   // Handle test user in development mode
