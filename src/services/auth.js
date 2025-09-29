@@ -1,11 +1,50 @@
 import api from './api.js';
 
+// Test user configuration
+const TEST_USER = {
+  phoneNumber: import.meta.env.VITE_TEST_PHONE || '9012121212',
+  otp: import.meta.env.VITE_TEST_OTP || '1234',
+  userData: {
+    id: 'test-user-1',
+    fullName: 'Test Employer',
+    email: 'test@example.com',
+    phoneNumber: import.meta.env.VITE_TEST_PHONE || '9012121212',
+    userType: 'employer',
+    companyName: 'Test Company',
+    location: { city: 'Test City', state: 'Test State' },
+    employeeCount: '10-50',
+    isConsultancy: false
+  }
+};
+
+// Check if test mode is enabled
+const isTestMode = import.meta.env.VITE_TEST_MODE === 'true' && import.meta.env.DEV;
+
 export async function sendOTP(phoneNumber) {
+  // Handle test user in development mode
+  if (isTestMode && phoneNumber === TEST_USER.phoneNumber) {
+    return {
+      success: true,
+      message: 'OTP sent successfully (test mode)'
+    };
+  }
+  
   const res = await api.post('/auth/send-otp', { phoneNumber });
   return res.data;
 }
 
 export async function verifyOTP(phoneNumber, otp) {
+  // Handle test user in development mode
+  if (isTestMode && phoneNumber === TEST_USER.phoneNumber && otp === TEST_USER.otp) {
+    return {
+      success: true,
+      isRegistered: true,
+      token: 'test-jwt-token-' + Date.now(),
+      user: TEST_USER.userData,
+      message: 'Login successful (test mode)'
+    };
+  }
+  
   const res = await api.post('/auth/verify-otp', { phoneNumber, otp });
   return res.data;
 }
