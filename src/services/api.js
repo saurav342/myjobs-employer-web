@@ -4,8 +4,17 @@ import axios from 'axios';
 const isProduction = window.location.protocol === 'https:';
 const isNetlify = window.location.hostname.includes('netlify.app');
 
-// Use the specified backend endpoint
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://ec2-16-176-22-21.ap-southeast-2.compute.amazonaws.com:3000/api';
+// Use proxy for production deployments, direct backend for development
+const getDefaultApiUrl = () => {
+  if (isProduction || isNetlify) {
+    // Use Netlify proxy to avoid mixed content issues
+    return '/api';
+  }
+  // Use direct backend for development
+  return 'http://ec2-16-176-22-21.ap-southeast-2.compute.amazonaws.com:3000/api';
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
