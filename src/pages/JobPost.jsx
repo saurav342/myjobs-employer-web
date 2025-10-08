@@ -3,45 +3,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { getTemplates } from '../services/jobs.js';
-
-const jobRoles = [
-  'construction', 'manufacturing', 'delivery', 'housekeeping', 'security', 'driver', 'cook', 'waiter', 
-  'welder', 'carpenter', 'painter', 'mason', 'loader', 'gardener', 'electrician', 'plumber', 'mechanic', 
-  'cleaner', 'helper', 'retail', 'cleaning', 'cooking', 'Risk Compliance', 'Software Development', 
-  'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Customer Service', 'Data Analysis', 'Design', 'other'
-];
-
-const jobTypes = ['Full Time', 'Part Time', 'Contract', 'Temporary', 'Both (Full-Time And Part-Time)'];
-const workLocationTypes = ['Work From Office', 'Work From Home', 'Field Job'];
-const payTypes = ['Fixed Only', 'Fixed + Incentive', 'Incentive Only'];
-
-const educationLevels = [
-  '10th Or Below 10th', '12th Pass', 'Diploma', 'Graduate', 'Post Graduate'
-];
-
-const englishLevels = [
-  'No English', 'Basic English', 'Good English'
-];
-
-const experienceOptions = [
-  'Any', 'Fresher Only', 'Experienced Only'
-];
-
-const minExperienceOptions = [
-  '6 Months', '1 Year', '2 Years', '3 Years', '5 Years', '10 Years'
-];
-
-const additionalRequirements = [
-  'Industry', 'Gender', 'Age', 'Regional Languages', 'Assets', 'Skills'
-];
-
-const perks = [
-  'Flexible Working Hours', 'Weekly Payout', 'Overtime Pay', 'Joining Bonus',
-  'Annual Bonus', 'PF', 'Travel Allowance (TA)', 'Petrol Allowance',
-  'Mobile Allowance', 'Internet Allowance', 'Laptop', 'Health Insurance',
-  'ESI (ESIC)', 'Food/Meals', 'Accommodation', '5 Working Days',
-  'One-Way Cab', 'Two-Way Cab'
-];
+import { 
+  jobCategories, 
+  categoryDisplayNames, 
+  jobTypes, 
+  workLocationTypes, 
+  payTypes,
+  educationLevels,
+  englishLevels,
+  experienceOptions,
+  minExperienceOptions,
+  additionalRequirements,
+  perks
+} from '../constants/jobCategories.js';
 
 export default function JobPost() {
   const nav = useNavigate();
@@ -357,8 +331,14 @@ export default function JobPost() {
             className="form-input"
           >
             <option value="">Select category</option>
-            {jobRoles.map(role => (
-              <option key={role} value={role}>{role}</option>
+            {Object.entries(jobCategories).map(([industry, roles]) => (
+              <optgroup key={industry} label={industry}>
+                {roles.map(role => (
+                  <option key={role} value={role}>
+                    {categoryDisplayNames[role] || role}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
@@ -891,7 +871,7 @@ export default function JobPost() {
           </div>
           <div className="detail-row">
             <span className="detail-label">Job role/category:</span>
-            <span className="detail-value">{form.jobRole}</span>
+            <span className="detail-value">{categoryDisplayNames[form.jobRole] || form.jobRole}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Job type:</span>
